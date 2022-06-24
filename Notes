@@ -1,0 +1,14 @@
+Producer Properties
+
+max.in.flight.requests.per.connection
+Indeed, this is one of the most important configuration parameters regarding producer's performance, specifically producer's throughput and latency. This parameter controls the maximum number of unacknowledged requests the producer will send to a certain partition on a single connection before blocking.
+
+In other words, it will send a single request, and until acks are received, it won't send another request to the broker (for that partition). As a suggestion, if you don't require all messages to be ordered, do not set this parameter to 1.
+
+Regarding retries and its link to this param:
+
+Allowing retries without setting max.in.flight.requests.per.connection to 1 will potentially change the ordering of records because if two batches are sent to a single partition, and the first fails and is retried but the second succeeds, then the records in the second batch may appear first.
+
+So it's not really recommended to be set to 1 by kafka; It is recommended when you require an ordered delivery. If you don't require this to happen, do not set max.in.flight.requests.per.connection to 1, as your producer's throughput will indeed be decreased.
+
+In resume: set it to one only if you are looking for ordered delivery of event.
