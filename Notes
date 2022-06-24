@@ -26,6 +26,18 @@ With acks=0:
 
 Setting the acks higher than 0, for example, acks=2, will have a direct impact on the performance as well, because for a request to be identified as successfull, 2 acks will have to be received from the cluster. This means, for example, that the blocking time of a producer which specifies only 1 in flight request will usually increase, as it will have to wait for 2 ack messages before unblocking and being able to send the next request for that partition.
 
+3. Idempotence
+There's another concept regarding your question, which is the idempotent producer. This may be the optimal option to achieve a balance between performance and efficiency.
+
+Let's imagine you set some retries in order to guarantee a message arrived properly. The broker receives the message, and when it sents you the ack, a network error makes your producer not to receive it. If retries are set, the producer will send again the same message, creating a duplicate message in the broker.
+
+Kafka 0.11.0 includes support for idempotent and transactional capabilities in the producer. Idempotent delivery ensures that messages are delivered exactly once to a particular topic partition during the lifetime of a single producer
+
+An idempotent producer has a unique producer ID and uses sequence IDs for each message, which allows the broker to ensure it is committing ordered messages with no duplication, on a per partition basis.
+
+This idempotent producer, in newer versions of Kafka clients, come as default with 5 max.in.flight.requests, increasing the performance from the "old" way to ensure delivered order. That's also the max value for the idempodent producer (from 1 to 5 is the valid range of in flight requests),It is, in resume, the best option if you require an ordered, safe pipeline, while keeping the producer's perfomance high.
+
+The idempotent producer leads to the exactly once semantics concept, explained deeper in the link.
 
 Source : 
 https://stackoverflow.com/questions/66095050/kafka-retries-config-and-performance-implications
