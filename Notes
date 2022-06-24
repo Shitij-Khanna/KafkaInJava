@@ -1,6 +1,6 @@
 Producer Properties
 
-max.in.flight.requests.per.connection
+1. max.in.flight.requests.per.connection
 Indeed, this is one of the most important configuration parameters regarding producer's performance, specifically producer's throughput and latency. This parameter controls the maximum number of unacknowledged requests the producer will send to a certain partition on a single connection before blocking.
 
 In other words, it will send a single request, and until acks are received, it won't send another request to the broker (for that partition). As a suggestion, if you don't require all messages to be ordered, do not set this parameter to 1.
@@ -12,3 +12,20 @@ Allowing retries without setting max.in.flight.requests.per.connection to 1 will
 So it's not really recommended to be set to 1 by kafka; It is recommended when you require an ordered delivery. If you don't require this to happen, do not set max.in.flight.requests.per.connection to 1, as your producer's throughput will indeed be decreased.
 
 In resume: set it to one only if you are looking for ordered delivery of event.
+
+2. acks
+There is another param that also is involved here, together with those you already quoted, the number of acks set.
+
+For example, acks = 0 will make both retries and max.in.flight params be completely irrelevant, as the producer will not wait for any ack from any broker, and will assume every request was successfull. Just like an UDP sender.
+
+With acks=0:
+
+1- retries does not take effect as there is no way to know if any failure occurred.
+
+2- max.in.flight does not take effect as there is no possible unacknowledged requests whatsoever.
+
+Setting the acks higher than 0, for example, acks=2, will have a direct impact on the performance as well, because for a request to be identified as successfull, 2 acks will have to be received from the cluster. This means, for example, that the blocking time of a producer which specifies only 1 in flight request will usually increase, as it will have to wait for 2 ack messages before unblocking and being able to send the next request for that partition.
+
+
+Source : 
+https://stackoverflow.com/questions/66095050/kafka-retries-config-and-performance-implications
